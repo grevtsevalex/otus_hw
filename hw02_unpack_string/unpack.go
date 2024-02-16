@@ -30,7 +30,8 @@ func Unpack(s string) (string, error) {
 			number, _ := strconv.Atoi(string(c))
 			if number == 0 { // Если 0, удаляем предыдущий символ
 				buf := res.String()
-				buf = buf[0 : len(buf)-1]
+				prevCharLenght := len(string(prev))
+				buf = buf[0 : len(buf)-prevCharLenght]
 				res.Reset()
 				res.WriteString(buf)
 			} else {
