@@ -80,3 +80,13 @@ func TestTop10(t *testing.T) {
 		}
 	})
 }
+
+func TestTop10UpperAndLowerCase(t *testing.T) {
+	t.Run("Upper and Lower case is different words", func(t *testing.T) {
+		expected := []string{
+			"Нога", // 2
+			"нога", // 2
+		}
+		require.Equal(t, expected, Top10("Нога нога Нога нога"))
+	})
+}
