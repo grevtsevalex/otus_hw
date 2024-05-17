@@ -1,9 +1,11 @@
+//go:build !bench
 // +build !bench
 
 package hw10programoptimization
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -35,5 +37,11 @@ func TestGetDomainStat(t *testing.T) {
 		result, err := GetDomainStat(bytes.NewBufferString(data), "unknown")
 		require.NoError(t, err)
 		require.Equal(t, DomainStat{}, result)
+	})
+
+	t.Run("invalid input data", func(t *testing.T) {
+		result, err := GetDomainStat(bytes.NewBufferString("hello"), "com")
+		require.Equal(t, DomainStat{}, result)
+		require.Truef(t, errors.Is(err, ErrInvalidInputData), "actual error %q", err)
 	})
 }
