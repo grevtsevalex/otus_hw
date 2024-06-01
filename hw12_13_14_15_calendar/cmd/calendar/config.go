@@ -1,20 +1,67 @@
 package main
 
-// При желании конфигурацию можно вынести в internal/config.
-// Организация конфига в main принуждает нас сужать API компонентов, использовать
-// при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
+import (
+	"fmt"
+	"io"
+	"os"
+
+	"github.com/pelletier/go-toml"
+)
+
+// Config модель конфига.
 type Config struct {
-	Logger LoggerConf
-	// TODO
+	Logger  LoggerConf
+	Server  ServerConf
+	DB      DBConf
+	Storage StorageConf
 }
 
+// LoggerConf модель конфига логгера.
 type LoggerConf struct {
-	Level string
-	// TODO
+	Level string `toml:"level"`
 }
 
-func NewConfig() Config {
-	return Config{}
+// StorageConf модель конфига хранилища.
+type StorageConf struct {
+	Type string `toml:"type"`
 }
 
-// TODO
+// DBConf модель конфига БД.
+type DBConf struct {
+	Name            string `toml:"name"`
+	User            string `toml:"user"`
+	Pass            string `toml:"pass"`
+	PoolSize        int    `toml:"poolSize"`
+	MaxConnLifeTime int    `toml:"maxConnLifeTime"`
+}
+
+// ServerConf модель конфига сервера.
+type ServerConf struct {
+	Host            string `toml:"host"`
+	Port            int    `toml:"port"`
+	HandlerTimeoutS int    `toml:"handlerTimeoutS"`
+	WriteTimeoutMS  int    `toml:"writeTimeoutMS"`
+	ReadTimeoutMS   int    `toml:"readTimeoutMS"`
+}
+
+// NewConfig инициализация конфига.
+func NewConfig(path string) (Config, error) {
+	var config Config
+	file, err := os.Open(path)
+	if err != nil {
+		return Config{}, fmt.Errorf("open config file: %w", err)
+	}
+	defer file.Close()
+
+	b, err := io.ReadAll(file)
+	if err != nil {
+		return config, fmt.Errorf("reading config file: %w", err)
+	}
+
+	err = toml.Unmarshal(b, &config)
+	if err != nil {
+		return config, fmt.Errorf("reading config file: %w", err)
+	}
+
+	return config, nil
+}
