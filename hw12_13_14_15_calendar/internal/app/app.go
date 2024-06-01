@@ -1,10 +1,8 @@
 package app
 
-import (
-	"context"
-)
-
-type App struct { // TODO
+type App struct {
+	Logger  Logger
+	Storage Storage
 }
 
 type Logger interface { // TODO
@@ -14,13 +12,5 @@ type Storage interface { // TODO
 }
 
 func New(logger Logger, storage Storage) *App {
-	return &App{}
+	return &App{Logger: logger, Storage: storage}
 }
-
-func (a *App) CreateEvent(ctx context.Context, id, title string) error {
-	// TODO
-	return nil
-	// return a.storage.CreateEvent(storage.Event{ID: id, Title: title})
-}
-
-// TODO
