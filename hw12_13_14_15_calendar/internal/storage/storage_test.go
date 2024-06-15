@@ -60,6 +60,8 @@ func TestStorage(t *testing.T) {
 
 		newTitle := "Second title"
 		event.Title = newTitle
+		event.StartDate = event.StartDate.Add(time.Hour * 48)
+		event.EndDate = event.EndDate.Add(time.Hour * 48)
 		err = st.Update(event)
 		require.NoError(t, err)
 
@@ -124,7 +126,7 @@ func generateEvent() (storage.Event, error) {
 		ID:                  storage.EventID(eventID.String()),
 		Title:               "First Title",
 		StartDate:           startDate,
-		EndDate:             startDate.AddDate(0, 0, 3),
+		EndDate:             startDate.AddDate(0, 0, 1),
 		AuthorID:            authorID,
 		HoursBeforeToNotify: 5,
 	}, nil

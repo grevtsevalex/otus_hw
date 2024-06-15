@@ -13,3 +13,5 @@ type Event struct {
 	AuthorID            string
 	HoursBeforeToNotify int
 }
+
+type Events map[EventID]Event
