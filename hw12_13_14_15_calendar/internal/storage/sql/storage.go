@@ -163,3 +163,31 @@ func (s *Storage) Get(eventID storage.EventID) (storage.Event, error) {
 
 	return event, nil
 }
+
+// GetEventsByDateRange получить список событий за период времени.
+func (s *Storage) GetEventsByDateRange(startDate time.Time, endDate time.Time) (storage.Events, error) {
+	query := `SELECT * FROM events 
+	WHERE $1 >= start_date && $2 <= end_date`
+	rows, err := s.pool.QueryContext(s.ctx, query, startDate, endDate)
+
+	var events storage.Events
+	for rows.Next() {
+		var event storage.Event
+		err = rows.Scan(&event.ID, &event.Title, &event.StartDate, &event.EndDate,
+			&event.Description, &event.AuthorID, &event.HoursBeforeToNotify)
+
+		if err != nil {
+			return events, fmt.Errorf("сканирование строк ответа: %w", err)
+		}
+
+		events[event.ID] = event
+	}
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return events, nil
+	} else if err != nil {
+		return events, err
+	}
+
+	return events, nil
+}

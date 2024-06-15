@@ -5,22 +5,18 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/app"
+	"github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/server"
 )
 
 // Server модель сервера.
 type Server struct {
-	logger Logger
+	logger server.Logger
 	config Config
-	app    Application
+	app    *app.App
 }
-
-// Logger тип логгера.
-type Logger interface {
-	Log(msg string)
-	Error(msg string)
-}
-
-type Application interface{}
 
 // Config конфиг сервера.
 type Config struct {
@@ -31,28 +27,35 @@ type Config struct {
 }
 
 // NewServer конструктор сервера.
-func NewServer(logger Logger, app Application, config Config) *Server {
+func NewServer(logger server.Logger, app *app.App, config Config) *Server {
 	return &Server{logger: logger, config: config, app: app}
 }
 
 // Start старт сервера.
 func (s *Server) Start(ctx context.Context) error {
-	handler := &Handler{}
-	mux := http.NewServeMux()
-	mux.HandleFunc("/hello", loggingMiddleware(handler.Hello, s.logger))
+	handler := &EventServiceHandler{logger: s.logger, app: s.app}
+	r := mux.NewRouter()
+	r.HandleFunc("/event", loggingMiddleware(handler.Add, s.logger)).Methods("POST")
+	r.HandleFunc("/event", loggingMiddleware(handler.Update, s.logger)).Methods("PUT")
+	r.HandleFunc("/event/{id}", loggingMiddleware(handler.Delete, s.logger)).Methods("DELETE")
+	r.HandleFunc("/get-all", loggingMiddleware(handler.GetAll, s.logger)).Methods("GET")
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", s.config.Port),
-		Handler:      http.TimeoutHandler(mux, time.Duration(s.config.HandlerTimeoutS)*time.Second, "handler timeout"),
+		Handler:      http.TimeoutHandler(r, time.Duration(s.config.HandlerTimeoutS)*time.Second, "handler timeout"),
 		ReadTimeout:  time.Duration(s.config.ReadTimeoutMS) * time.Millisecond,
 		WriteTimeout: time.Duration(s.config.WriteTimeoutMS) * time.Millisecond,
 	}
 
+	s.logger.Log(fmt.Sprintf("starting http server on %d", s.config.Port))
+
 	err := server.ListenAndServe()
+	s.logger.Log("START SERVINT HTTP")
+
 	if err != nil {
-		s.logger.Error(err.Error())
+		return fmt.Errorf("serve http connections: %w", err)
 	}
-	<-ctx.Done()
+
 	return nil
 }
 
@@ -61,13 +64,4 @@ func (s *Server) Stop(ctx context.Context) error {
 	<-ctx.Done()
 	s.logger.Log("Stopping server...")
 	return nil
-}
-
-// Handler модель обработчика.
-type Handler struct{}
-
-// Hello обработчик.
-func (h *Handler) Hello(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
-	fmt.Println(r.URL)
 }
