@@ -17,6 +17,8 @@ issues:
         - dupl
         - gocyclo
         - gosec
+  exclude:
+    - is not allowed from list 'Main'
 
 linters:
   disable-all: true

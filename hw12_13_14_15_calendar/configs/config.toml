@@ -1,5 +1,20 @@
 [logger]
 level = "INFO"
 
-# TODO
-# ...
+[server]
+host = "localhost"
+port = 8080
+handlerTimeoutS = 1
+writeTimeoutMS = 500
+readTimeoutMS = 500
+
+[db]
+name = "db"
+user = "user"
+pass = "pass"
+poolSize = 5
+maxConnLifeTime = 100
+
+[storage]
+# type = "mem"
+type = "sql"

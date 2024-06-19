@@ -3,15 +3,17 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
-	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/app"
+	"github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/server/http"
+	"github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/storage"
+	memorystorage "github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 var configFile string
@@ -28,34 +30,69 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+	config, err := NewConfig(configFile)
+	if err != nil {
+		err = fmt.Errorf("config initialization: %w", err)
+		os.Stderr.WriteString(err.Error())
+		os.Exit(1)
+	}
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	logg := logger.New(config.Logger.Level, os.Stdout)
 
-	server := internalhttp.NewServer(logg, calendar)
+	eventStorage, err := getStorage(config)
+	if err != nil {
+		err = fmt.Errorf("storage initialization: %w", err)
+		os.Stderr.WriteString(err.Error())
+		os.Exit(1)
+	}
+	logg.Info(fmt.Sprintf("Получили объект хранилища, тип: %s", config.Storage.Type))
 
-	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	calendar := app.New(logg, eventStorage)
+
+	server := internalhttp.NewServer(logg, calendar, internalhttp.Config{
+		Port:            config.Server.Port,
+		HandlerTimeoutS: config.Server.HandlerTimeoutS,
+		WriteTimeoutMS:  config.Server.WriteTimeoutMS,
+		ReadTimeoutMS:   config.Server.ReadTimeoutMS,
+	})
+
+	logg.Info("calendar is running...")
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
 	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		if err := server.Start(ctx); err != nil {
+			logg.Error("failed to start http server: " + err.Error())
+			os.Exit(1)
 		}
 	}()
 
-	logg.Info("calendar is running...")
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
+	<-stop
+
+	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err := server.Stop(ctx); err != nil {
+		logg.Error("failed to stop http server: " + err.Error())
 	}
+}
+
+// getStorage получить объект хранилища.
+func getStorage(conf Config) (storage.EventStorage, error) {
+	var storage storage.EventStorage
+	var err error
+	switch conf.Storage.Type {
+	case "mem":
+		storage = memorystorage.New()
+	case "sql":
+		dbConf := sqlstorage.Config{DBName: conf.DB.Name, User: conf.DB.User, Pass: conf.DB.Pass}
+		storage, err = sqlstorage.New(dbConf)
+		if err != nil {
+			return nil, fmt.Errorf("получение хранилища: %w", err)
+		}
+	}
+
+	return storage, nil
 }
