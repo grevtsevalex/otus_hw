@@ -112,12 +112,59 @@ func TestStorage(t *testing.T) {
 		err = st.Update(newEvent)
 		require.ErrorIs(t, err, storage.ErrNoEvent)
 	})
+
+	t.Run("get events by this day", func(t *testing.T) {
+		now := time.Now().UTC()
+		startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+		endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, time.UTC)
+
+		todayEvent, err := generateEvent()
+		require.NoError(t, err)
+		todayEvent.StartDate = startOfToday.Add(time.Hour * 3)
+		todayEvent.EndDate = todayEvent.StartDate.Add(time.Hour * 3)
+		err = st.Add(todayEvent)
+		defer st.Delete(todayEvent.ID)
+		require.NoError(t, err)
+
+		endDayEvent, err := generateEvent()
+		require.NoError(t, err)
+		endDayEvent.StartDate = time.Now()
+		endDayEvent.EndDate = endOfToday
+		err = st.Add(endDayEvent)
+		defer st.Delete(endDayEvent.ID)
+		require.NoError(t, err)
+
+		veryLongEvent, err := generateEvent()
+		require.NoError(t, err)
+		veryLongEvent.StartDate = time.Now()
+		veryLongEvent.EndDate = veryLongEvent.StartDate.AddDate(0, 0, 1)
+		err = st.Add(veryLongEvent)
+		defer st.Delete(veryLongEvent.ID)
+		require.NoError(t, err)
+
+		todayEvents, err := st.GetEventsByDateRange(startOfToday, endOfToday)
+		require.NoError(t, err)
+		expectedEventsIDs := []storage.EventID{todayEvent.ID, endDayEvent.ID}
+
+		if len(todayEvents) != len(expectedEventsIDs) {
+			t.Error("wrong events")
+		}
+
+		for _, eventID := range expectedEventsIDs {
+			if _, ok := todayEvents[eventID]; !ok {
+				t.Error("not all event")
+			}
+		}
+	})
 }
 
 // generateEvent сгенерировать событие для теста.
 func generateEvent() (storage.Event, error) {
 	eventID, err := uuid.DefaultGenerator.NewV4()
-	authorID := "34a8e2ab-e345-4c0c-9e0d-a2af9abc873a"
+	if err != nil {
+		return storage.Event{}, fmt.Errorf("generate event: %w", err)
+	}
+	authorID, err := uuid.DefaultGenerator.NewV4()
 	startDate := time.Date(2024, 0o5, 28, 15, 0, 0, 0, time.UTC)
 	if err != nil {
 		return storage.Event{}, fmt.Errorf("generate event: %w", err)
@@ -127,7 +174,7 @@ func generateEvent() (storage.Event, error) {
 		Title:               "First Title",
 		StartDate:           startDate,
 		EndDate:             startDate.AddDate(0, 0, 1),
-		AuthorID:            authorID,
+		AuthorID:            authorID.String(),
 		HoursBeforeToNotify: 5,
 	}, nil
 }

@@ -21,6 +21,9 @@ service EventService {
     rpc Update (UpdateRequest) returns (UpdateResponse) {}
     rpc Delete (DeleteRequest) returns (DeleteResponse) {}
     rpc GetAll (google.protobuf.Empty) returns (GetAllResponse) {}
+    rpc GetDayEvents (GetEventsByRangeRequest) returns (GetDayEventsResponse) {}
+    rpc GetWeekEvents (GetEventsByRangeRequest) returns (GetWeekEventsResponse) {}
+    rpc GetMonthEvents (GetEventsByRangeRequest) returns (GetMonthEventsResponse) {}
 }
 
 message AddRequest {
@@ -49,5 +52,21 @@ message DeleteResponse {
 }
 
 message GetAllResponse {
+    repeated Event events = 1;
+}
+
+message GetEventsByRangeRequest {
+  google.protobuf.Timestamp from = 1;  
+}
+
+message GetDayEventsResponse {
+    repeated Event events = 1;
+}
+
+message GetWeekEventsResponse {
+    repeated Event events = 1;
+}
+
+message GetMonthEventsResponse {
     repeated Event events = 1;
 }
