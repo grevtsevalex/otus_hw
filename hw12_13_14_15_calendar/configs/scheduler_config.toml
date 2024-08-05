@@ -1,0 +1,16 @@
+[logger]
+level = "INFO"
+
+[db]
+name = "db"
+user = "user"
+pass = "pass"
+poolSize = 5
+maxConnLifeTime = 100
+
+[storage]
+type = "mem"
+# type = "sql"
+
+[queue]
+address = "amqp://localhost:5672/"
