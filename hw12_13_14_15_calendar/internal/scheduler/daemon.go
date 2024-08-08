@@ -2,7 +2,10 @@ package scheduler
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	"github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/notify"
 	"github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/queue"
 	"github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/storage"
 )
@@ -33,21 +36,72 @@ func NewScheduler(storage storage.EventStorage, l Logger, q queue.Queue) Schedul
 
 // Start запустить планировщик.
 func (s *scheduler) Start(ctx context.Context) {
+	go s.startOldEventsCrawler(ctx)
 L:
-	for j := 0; j < 5; j++ {
+	for {
 		select {
 		case <-ctx.Done():
 			s.logger.Log("stopping scheduler by context")
 			break L
 
 		default:
-			s.queue.Send()
-			// select events where field HoursBeforeToNotify not null
-			// loop for selected events
-			// // write message for queue and send it to rabbit
-			// // set null to HoursBeforeToNotify
+			events, err := s.storage.GetAll() // лучше метод который сразу выбирает нужные события
+			if err != nil {
+				s.logger.Error(fmt.Sprintf("selecting all events: %s", err.Error()))
+				break L
+			}
 
-			// delete all events that older than 1 year
+			for _, event := range events {
+				if event.HoursBeforeToNotify == 0 {
+					continue
+				}
+
+				notifyDate := event.StartDate.Add(time.Hour * time.Duration(-event.HoursBeforeToNotify))
+
+				event.HoursBeforeToNotify = 0
+				err = s.storage.Update(event)
+				if err != nil {
+					s.logger.Error(fmt.Sprintf("set 0 to HoursBeforeToNotify: %s", err.Error()))
+				}
+
+				s.queue.Send(notify.Notify{
+					ID:          "id",
+					Title:       "notify message",
+					Date:        notifyDate,
+					RecipientID: event.AuthorID,
+				})
+			}
+		}
+	}
+}
+
+func (s *scheduler) startOldEventsCrawler(ctx context.Context) {
+	s.logger.Log("starting old events crawler")
+L:
+	for {
+		select {
+		case <-ctx.Done():
+			s.logger.Log("stopping remove crawler by context")
+			break L
+
+		default:
+			events, err := s.storage.GetAll() // лучше метод который сразу выбирает нужные события
+			if err != nil {
+				s.logger.Error(fmt.Sprintf("selecting all events: %s", err.Error()))
+				break L
+			}
+
+			for _, event := range events {
+				lowBorder := time.Now().AddDate(-1, 0, 0)
+				if event.EndDate.After(lowBorder) {
+					continue
+				}
+
+				err := s.storage.Delete(event.ID)
+				if err != nil {
+					s.logger.Error(fmt.Sprintf("delete old event: %s eventId: %s", err.Error(), event.ID))
+				}
+			}
 		}
 	}
 }

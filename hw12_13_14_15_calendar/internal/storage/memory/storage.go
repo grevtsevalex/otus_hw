@@ -41,9 +41,6 @@ func (s *Storage) Update(event storage.Event) error {
 		return storage.ErrNoEvent
 	}
 
-	if !s.eventDateIsFree(event.AuthorID, event.StartDate, event.EndDate) {
-		return storage.ErrDateBusy
-	}
 	s.events[event.ID] = event
 	return nil
 }
@@ -109,4 +106,16 @@ func (s *Storage) GetEventsByAuthor(authorID string) storage.Events {
 		}
 	}
 	return authorEvents
+}
+
+// GetEventsByDateRange получить список событий за период времени.
+func (s *Storage) GetEventsByDateRange(startDate time.Time, endDate time.Time) (storage.Events, error) {
+	events := make(storage.Events)
+	for eventID, event := range s.events {
+		if (event.StartDate.After(startDate) || event.StartDate.Equal(startDate)) &&
+			(event.EndDate.Before(endDate) || event.EndDate.Equal(endDate)) {
+			events[eventID] = event
+		}
+	}
+	return events, nil
 }

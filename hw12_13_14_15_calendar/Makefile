@@ -45,10 +45,16 @@ migrate-status:
 
 rabbit-up:
 	docker run --rm --hostname my-rabbit --name calendar-rabbit rabbitmq:3
-  docker run -d --name rb -p 15672:15672 -p 5672:5672 rabbitmq:3-management
+	docker run -d --name rb -p 15672:15672 -p 5672:5672 rabbitmq:3-management
 
 scheduler-build:
 	go build -v -o $(BIN_SC) -ldflags "$(LDFLAGS)" ./cmd/scheduler
 
 scheduler-run: scheduler-build
 	$(BIN_SC) -config ./configs/scheduler_config.toml
+
+sender-build:
+	go build -v -o $(BIN_SC) -ldflags "$(LDFLAGS)" ./cmd/sender
+
+sender-run: sender-build
+	$(BIN_SC) -config ./configs/sender_config.toml

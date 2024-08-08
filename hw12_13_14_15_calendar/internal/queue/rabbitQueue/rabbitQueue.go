@@ -2,9 +2,11 @@ package rabbitqueue
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/grevtsevalex/otus_hw/hw12_13_14_15_calendar/internal/notify"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -43,26 +45,30 @@ func NewQueue(address string, log Logger) *RabbitQueue {
 }
 
 // Send отправить сообщение в очередь.
-func (r *RabbitQueue) Send() {
+func (r *RabbitQueue) Send(msg notify.Notify) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	body := "Hello World!"
-	err := r.ch.PublishWithContext(ctx,
+	body, err := json.Marshal(msg)
+	if err != nil {
+		failOnError(err, "Failed to marshal msg", r.log)
+		return
+	}
+	err = r.ch.PublishWithContext(ctx,
 		"",       // exchange
 		r.q.Name, // routing key
 		false,    // mandatory
 		false,    // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
+			ContentType: "application/json",
+			Body:        body,
 		})
 	failOnError(err, "Failed to publish a message", r.log)
 	r.log.Log(fmt.Sprintf(" [x] Sent %s\n", body))
 }
 
 // Receive получение сообщений из очереди.
-func (r *RabbitQueue) Receive() {
+func (r *RabbitQueue) Receive() <-chan notify.Notify {
 	msgs, err := r.ch.Consume(
 		r.q.Name, // queue
 		"",       // consumer
@@ -74,16 +80,21 @@ func (r *RabbitQueue) Receive() {
 	)
 	failOnError(err, "Failed to register a consumer", r.log)
 
-	var forever chan struct{}
+	box := make(chan notify.Notify)
 
 	go func() {
 		for d := range msgs {
 			r.log.Log(fmt.Sprintf("Received a message: %s", d.Body))
+			var n notify.Notify
+			err := json.Unmarshal(d.Body, &n)
+			if err != nil {
+				r.log.Error(fmt.Sprintf("Unmarshal message: %s", d.Body))
+			}
+			box <- n
 		}
 	}()
 
-	r.log.Log(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever
+	return box
 }
 
 // failOnError запись ошибки в логи.

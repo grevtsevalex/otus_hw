@@ -2,15 +2,15 @@
 level = "INFO"
 
 [db]
-name = "db"
-user = "user"
+name = "calendar"
+user = "user1"
 pass = "pass"
 poolSize = 5
 maxConnLifeTime = 100
 
 [storage]
-type = "mem"
-# type = "sql"
+# type = "mem"
+type = "sql"
 
 [queue]
 address = "amqp://localhost:5672/"

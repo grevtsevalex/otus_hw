@@ -8,9 +8,12 @@ handlerTimeoutS = 1
 writeTimeoutMS = 500
 readTimeoutMS = 500
 
+[grpc]
+port = 50051
+
 [db]
-name = "db"
-user = "user"
+name = "calendar"
+user = "user1"
 pass = "pass"
 poolSize = 5
 maxConnLifeTime = 100

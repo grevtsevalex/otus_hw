@@ -14,6 +14,7 @@ type Config struct {
 	Server  ServerConf
 	DB      DBConf
 	Storage StorageConf
+	Grpc    GrpcConf
 }
 
 // LoggerConf модель конфига логгера.
@@ -42,6 +43,11 @@ type ServerConf struct {
 	HandlerTimeoutS int    `toml:"handlerTimeoutS"`
 	WriteTimeoutMS  int    `toml:"writeTimeoutMS"`
 	ReadTimeoutMS   int    `toml:"readTimeoutMS"`
+}
+
+// GrpcConf модель конфига сервера.
+type GrpcConf struct {
+	Port int `toml:"port"`
 }
 
 // NewConfig инициализация конфига.
