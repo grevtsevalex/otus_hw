@@ -41,3 +41,6 @@ migrate-down:
 
 migrate-status:
 	$(HOME)/go/bin/goose -dir ./migrations postgres "user=$(DB_USER) dbname=$(DB_NAME) sslmode=disable password=$(DB_PASS)" status
+
+generate:
+	protoc api/eventService.proto --go_out=./internal/server/grpc/pb --go-grpc_out=./internal/server/grpc/pb

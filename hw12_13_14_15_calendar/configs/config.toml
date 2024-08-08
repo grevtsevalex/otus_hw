@@ -8,6 +8,9 @@ handlerTimeoutS = 1
 writeTimeoutMS = 500
 readTimeoutMS = 500
 
+[grpc]
+port = 50051
+
 [db]
 name = "db"
 user = "user"
@@ -16,5 +19,5 @@ poolSize = 5
 maxConnLifeTime = 100
 
 [storage]
-# type = "mem"
-type = "sql"
+type = "mem"
+# type = "sql"
