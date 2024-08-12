@@ -28,8 +28,8 @@ func main() {
 	config, err := NewConfig(configFile)
 	if err != nil {
 		err = fmt.Errorf("config initialization: %w", err)
-		os.Stderr.WriteString(err.Error())
-		os.Exit(1)
+		fmt.Println(err.Error())
+		return
 	}
 
 	logg := logger.New(config.Logger.Level, os.Stdout)
@@ -37,8 +37,8 @@ func main() {
 	st, err := getStorage(config)
 	if err != nil {
 		err = fmt.Errorf("storage initialization: %w", err)
-		os.Stderr.WriteString(err.Error())
-		os.Exit(1)
+		fmt.Println(err.Error())
+		return
 	}
 	logg.Info(fmt.Sprintf("Получили объект хранилища, тип: %s", config.Storage.Type))
 
@@ -46,7 +46,7 @@ func main() {
 	q := rabbitqueue.NewQueue(config.Queue.Address, logg)
 
 	// create scheduler.
-	daemon := scheduler.NewScheduler(st, logg, q)
+	daemon := scheduler.NewScheduler(st, logg, q, time.Second*time.Duration(config.Cron.Period))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -75,7 +75,7 @@ func getStorage(conf Config) (storage.EventStorage, error) {
 	case "mem":
 		storage = memorystorage.New()
 	case "sql":
-		dbConf := sqlstorage.Config{DBName: conf.DB.Name, User: conf.DB.User, Pass: conf.DB.Pass}
+		dbConf := sqlstorage.Config{DBName: conf.DB.Name, User: conf.DB.User, Pass: conf.DB.Pass, Host: conf.DB.Host}
 		storage, err = sqlstorage.New(dbConf)
 		if err != nil {
 			return nil, fmt.Errorf("получение хранилища: %w", err)

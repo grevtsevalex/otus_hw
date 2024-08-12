@@ -18,9 +18,10 @@ type Logger interface {
 
 // scheduler модель планировщика.
 type scheduler struct {
-	logger  Logger
-	queue   queue.Queue
-	storage storage.EventStorage
+	logger       Logger
+	queue        queue.Queue
+	storage      storage.EventStorage
+	deletePeriod time.Duration
 }
 
 // Scheduler тип планировщика.
@@ -30,8 +31,8 @@ type Scheduler interface {
 }
 
 // NewScheduler конструктор.
-func NewScheduler(storage storage.EventStorage, l Logger, q queue.Queue) Scheduler {
-	return &scheduler{storage: storage, logger: l, queue: q}
+func NewScheduler(storage storage.EventStorage, l Logger, q queue.Queue, period time.Duration) Scheduler {
+	return &scheduler{storage: storage, logger: l, queue: q, deletePeriod: period}
 }
 
 // Start запустить планировщик.
@@ -103,6 +104,8 @@ L:
 				}
 			}
 		}
+
+		time.Sleep(s.deletePeriod)
 	}
 }
 

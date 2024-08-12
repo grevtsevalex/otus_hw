@@ -2,4 +2,9 @@
 level = "INFO"
 
 [queue]
-address = "amqp://localhost:5672/"
+address = "amqp://rabbitmq:5672/"
+# for localhost
+# address = "amqp://127.0.0.1:5672/"
+
+[cron]
+periodSec = 2

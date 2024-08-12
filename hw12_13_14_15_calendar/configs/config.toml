@@ -1,5 +1,5 @@
 [logger]
-level = "INFO"
+level = "info"
 
 [server]
 host = "localhost"
@@ -12,6 +12,8 @@ readTimeoutMS = 500
 port = 50051
 
 [db]
+# for docker
+host = "db"
 name = "calendar"
 user = "user1"
 pass = "pass"
