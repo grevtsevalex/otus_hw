@@ -14,6 +14,7 @@ type Config struct {
 	DB      DBConf
 	Storage StorageConf
 	Queue   QueueConf
+	Cron    Cron
 }
 
 // LoggerConf модель конфига логгера.
@@ -29,6 +30,11 @@ type StorageConf struct {
 // StorageConf модель конфига очереди.
 type QueueConf struct {
 	Address string `toml:"address"`
+}
+
+// Cron модель конфига крона удаления событий.
+type Cron struct {
+	Period int `toml:"periodSec"`
 }
 
 // DBConf модель конфига БД.

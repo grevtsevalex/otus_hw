@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Logger LoggerConf
 	Queue  QueueConf
+	Cron   Cron
 }
 
 // LoggerConf модель конфига логгера.
@@ -22,6 +23,11 @@ type LoggerConf struct {
 // StorageConf модель конфига очереди.
 type QueueConf struct {
 	Address string `toml:"address"`
+}
+
+// Cron модель конфига крона обработки очереди событий.
+type Cron struct {
+	Period int `toml:"periodSec"`
 }
 
 // NewConfig инициализация конфига.

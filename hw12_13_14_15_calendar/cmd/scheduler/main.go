@@ -46,7 +46,7 @@ func main() {
 	q := rabbitqueue.NewQueue(config.Queue.Address, logg)
 
 	// create scheduler.
-	daemon := scheduler.NewScheduler(st, logg, q)
+	daemon := scheduler.NewScheduler(st, logg, q, time.Second*time.Duration(config.Cron.Period))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()

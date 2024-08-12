@@ -35,7 +35,7 @@ func main() {
 	q := rabbitqueue.NewQueue(config.Queue.Address, logg)
 
 	// create sender.
-	daemon := sender.NewSender(logg, q)
+	daemon := sender.NewSender(logg, q, time.Second*time.Duration(config.Cron.Period))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()

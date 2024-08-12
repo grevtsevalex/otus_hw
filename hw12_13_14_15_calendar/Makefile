@@ -43,9 +43,12 @@ migrate-down:
 migrate-status:
 	$(HOME)/go/bin/goose -dir ./migrations postgres "user=$(DB_USER) dbname=$(DB_NAME) sslmode=disable password=$(DB_PASS)" status
 
+generate:
+	protoc api/eventService.proto --go_out=./internal/server/grpc/pb --go-grpc_out=./internal/server/grpc/pb
+
 rabbit-up:
-	docker run --rm --hostname my-rabbit --name calendar-rabbit rabbitmq:3
-	docker run -d --name rb -p 15672:15672 -p 5672:5672 rabbitmq:3-management
+	# docker run --rm --hostname my-rabbit --name calendar-rabbit rabbitmq:3
+	docker run -d --name rb1 -p 15672:15672 -p 5672:5672 rabbitmq:3-management
 
 scheduler-build:
 	go build -v -o $(BIN_SC) -ldflags "$(LDFLAGS)" ./cmd/scheduler
