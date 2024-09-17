@@ -1,6 +1,15 @@
 version: "3"
 
 services:
+  test-container: # Имя сервиса
+    build:
+      context: .
+      dockerfile: ./tests/Dockerfile
+    depends_on:
+      - calendar
+    networks:
+      - test-net
+
   calendar: # Имя сервиса
     build:
       context: .
@@ -13,6 +22,7 @@ services:
         condition: service_completed_successfully
     networks:
       - app-network
+      - test-net
 
   scheduler:
     build:
@@ -85,4 +95,6 @@ networks:
   app-network:
     driver: bridge
   rabbit:
+    driver: bridge
+  test-net:
     driver: bridge

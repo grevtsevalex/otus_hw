@@ -1,6 +1,7 @@
 BIN := "./bin/calendar"
 BIN_SC := "./bin/calendar_scheduler"
 DOCKER_IMG="calendar:develop"
+DOCKER_TEST_IMG="test_container:develop"
 DOCKER_SCH_IMG="scheduler:develop"
 DOCKER_SEN_IMG="sender:develop"
 
@@ -50,6 +51,11 @@ rabbit-up:
 
 # -- docker --
 
+build: 
+	make build-calendar-img 
+	make build-scheduler-img 
+	make build-sender-img
+
 # сборка образа календаря
 build-calendar-img:
 	docker build \
@@ -83,6 +89,18 @@ build-sender-img:
 run-sender-img: build-sender-img
 	docker run $(DOCKER_SEN_IMG)
 
+
+# сборка образа приложения тестирования
+build-test-img:
+	docker build \
+		--build-arg=LDFLAGS="$(LDFLAGS)" \
+		-t $(DOCKER_TEST_IMG) \
+		-f tests/Dockerfile .
+
+# запуск контейнера приложения тестирования
+run-test-img: build-test-img
+	docker run $(DOCKER_TEST_IMG)
+
 # -- -- --
 
 
@@ -102,8 +120,8 @@ lint: install-lint-deps
 	golangci-lint run ./...
 
 integration-tests:
-	docker compose -f ./docker-compose-test.yaml up -d
 	docker compose -f ./docker-compose-test.yaml down
+	docker compose -f ./docker-compose-test.yaml run test-container
 
 .PHONY: build run build-img run-img version test lint
 
