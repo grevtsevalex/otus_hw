@@ -154,6 +154,18 @@ func run(port int) {
 	}
 	// -- -- --
 
+	getEventsTesting(ctx, client, firstEventID, secondEventID)
+
+	os.Exit(0)
+}
+
+// getEventsTesting тестирование получения событий.
+func getEventsTesting(
+	ctx context.Context,
+	client eventpb.EventServiceClient,
+	firstEventID string,
+	secondEventID string,
+) {
 	// -- get today events
 	fmt.Println("get today events")
 
@@ -224,8 +236,6 @@ func run(port int) {
 		}
 	}
 	// -- -- --
-
-	os.Exit(0)
 }
 
 // createEvent дать событие.
