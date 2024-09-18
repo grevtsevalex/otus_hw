@@ -62,4 +62,16 @@ func TestTelnetClient(t *testing.T) {
 
 		wg.Wait()
 	})
+
+	t.Run("wrong address", func(t *testing.T) {
+		in := &bytes.Buffer{}
+		out := &bytes.Buffer{}
+
+		timeout, err := time.ParseDuration("10s")
+		require.NoError(t, err)
+
+		client := NewTelnetClient("12312.3123", timeout, io.NopCloser(in), out)
+		err = client.Connect()
+		require.ErrorIs(t, err, ErrConnectionFailed)
+	})
 }
