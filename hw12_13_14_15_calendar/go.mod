@@ -9,6 +9,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/pelletier/go-toml v1.9.5
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.2

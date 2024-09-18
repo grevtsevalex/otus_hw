@@ -136,7 +136,8 @@ func (s *Storage) GetAll() ([]storage.Event, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var event storage.Event
-		if err := rows.Scan(&event); err != nil {
+		if err := rows.Scan(&event.ID, &event.Title, &event.StartDate,
+			&event.EndDate, &event.Description, &event.AuthorID, &event.HoursBeforeToNotify); err != nil {
 			return result, fmt.Errorf("сканирование строки: %w", err)
 		}
 		result = append(result, event)

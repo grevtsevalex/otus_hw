@@ -1,0 +1,8 @@
+[logger]
+level = "INFO"
+
+[queue]
+address = "amqp://localhost:5672/"
+
+[cron]
+periodSec = 2

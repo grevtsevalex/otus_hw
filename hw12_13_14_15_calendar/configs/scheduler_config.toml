@@ -1,16 +1,6 @@
 [logger]
 level = "INFO"
 
-[server]
-host = "localhost"
-port = 8080
-handlerTimeoutS = 1
-writeTimeoutMS = 500
-readTimeoutMS = 500
-
-[grpc]
-port = 50051
-
 [db]
 name = "calendar"
 user = "user1"
@@ -21,3 +11,9 @@ maxConnLifeTime = 100
 [storage]
 # type = "mem"
 type = "sql"
+
+[queue]
+address = "amqp://localhost:5672/"
+
+[cron]
+periodSec = 2
