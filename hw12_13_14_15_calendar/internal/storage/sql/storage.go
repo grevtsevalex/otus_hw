@@ -15,6 +15,7 @@ import (
 
 // Config модель конфига для хранилища.
 type Config struct {
+	Host            string
 	DBName          string
 	User            string
 	Pass            string
@@ -43,7 +44,7 @@ func New(config Config) (*Storage, error) {
 
 // Connect подключиться к БД.
 func (s *Storage) Connect(ctx context.Context) error {
-	dsn := fmt.Sprintf("user=%s dbname=%s password=%s", s.conf.User, s.conf.DBName, s.conf.Pass)
+	dsn := fmt.Sprintf("host=%s user=%s dbname=%s password=%s", s.conf.Host, s.conf.User, s.conf.DBName, s.conf.Pass)
 	db, err := sql.Open("pgx", dsn) // *sql.DB
 	if err != nil {
 		log.Fatalf("failed to load driver: %v", err)

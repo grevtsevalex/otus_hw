@@ -30,6 +30,7 @@ type StorageConf struct {
 // DBConf модель конфига БД.
 type DBConf struct {
 	Name            string `toml:"name"`
+	Host            string `toml:"host"`
 	User            string `toml:"user"`
 	Pass            string `toml:"pass"`
 	PoolSize        int    `toml:"poolSize"`

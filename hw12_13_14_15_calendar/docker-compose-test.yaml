@@ -1,0 +1,100 @@
+version: "3"
+
+services:
+  test-container: # Имя сервиса
+    build:
+      context: .
+      dockerfile: ./tests/Dockerfile
+    depends_on:
+      - calendar
+    networks:
+      - test-net
+
+  calendar: # Имя сервиса
+    build:
+      context: .
+      dockerfile: ./build/Dockerfile
+    ports: # Проброс портов
+      - "8888:8080"
+      - "50051:50051"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+      - test-net
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: ./build/scheduler.Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+      - rabbit
+
+  sender:
+    build:
+      context: .
+      dockerfile: ./build/sender.Dockerfile
+    restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - rabbit
+  
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 20s
+      retries: 5
+    networks:
+      - rabbit
+      
+  migrations:
+    image: ghcr.io/kukymbr/goose-docker:3.22.0
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - GOOSE_DRIVER=postgres
+      - GOOSE_DBSTRING=host=db port=5432 user=user1 password=pass dbname=calendar
+      - GOOSE_VERBOSE=true
+    volumes:
+      - ./migrations:/migrations
+    networks:
+      - app-network
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: user1
+      POSTGRES_DB: calendar
+    ports: # Проброс портов
+      - "5432:5432"
+    # Хелсчек для проверки готовности БД к работе
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user1 -d calendar"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+  rabbit:
+    driver: bridge
+  test-net:
+    driver: bridge

@@ -25,8 +25,8 @@ func main() {
 	config, err := NewConfig(configFile)
 	if err != nil {
 		err = fmt.Errorf("config initialization: %w", err)
-		os.Stderr.WriteString(err.Error())
-		os.Exit(1)
+		fmt.Println(err.Error())
+		return
 	}
 
 	logg := logger.New(config.Logger.Level, os.Stdout)

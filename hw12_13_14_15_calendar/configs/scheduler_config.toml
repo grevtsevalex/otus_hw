@@ -2,6 +2,8 @@
 level = "INFO"
 
 [db]
+# for docker
+host = "db"
 name = "calendar"
 user = "user1"
 pass = "pass"
@@ -13,7 +15,10 @@ maxConnLifeTime = 100
 type = "sql"
 
 [queue]
-address = "amqp://localhost:5672/"
+# for docker
+address = "amqp://rabbitmq/"
+# for localhost
+# address = "amqp://127.0.0.1:5672/"
 
 [cron]
 periodSec = 2
