@@ -11,14 +11,14 @@ poolSize = 5
 maxConnLifeTime = 100
 
 [storage]
-# type = "mem"
-type = "sql"
+type = "mem"
+# type = "sql"
 
 [queue]
 # for docker
-address = "amqp://rabbitmq/"
+# address = "amqp://rabbitmq/"
 # for localhost
-# address = "amqp://127.0.0.1:5672/"
+address = "amqp://127.0.0.1:5672/"
 
 [cron]
 periodSec = 2

@@ -1,0 +1,16 @@
+# k8s/frontend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: calendar-service
+spec:
+  # NodePort — один из встроенных типов сервисов
+  # в Kubernetes. Его выбор сейчас обусловлен особенностями
+  # реализации minikube, в нормальном кластере можно
+  # было бы использовать более простой type: ClusterIP.
+  type: {{ .Values.serviceType }}
+  selector:
+    app: calendar-app
+  ports:
+    - protocol: TCP
+      port: {{ .Values.appPort }}

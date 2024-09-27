@@ -117,7 +117,7 @@ install-lint-deps:
 
 # запустить линтеры
 lint: install-lint-deps
-	golangci-lint run ./...
+	golangci-lint run ./... --fix
 
 integration-tests:
 	docker compose -f ./docker-compose-test.yaml down
@@ -140,3 +140,12 @@ migrate-status:
 # сгенерить прото-файлы
 generate:
 	protoc api/eventService.proto --go_out=./internal/server/grpc/pb --go-grpc_out=./internal/server/grpc/pb
+
+# деплоймент
+deployment:
+	kubectl apply -f chart/templates/calendar-deployment.yaml 
+	kubectl apply -f chart/templates/service.yaml 
+	kubectl apply -f chart/templates/ingress.yaml
+
+helm-template:
+	helm template charts > charts/test.yaml
